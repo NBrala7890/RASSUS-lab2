@@ -21,7 +21,7 @@ public class StupidUDPClient {
 
     static final int PORT = 10001; // server port
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String[] args) throws IOException {
 
         String sendString = "Any string...";
 
@@ -52,9 +52,10 @@ public class StupidUDPClient {
             socket.send(packet); //SENDTO
             System.out.print(new String(sendBuf));
         }
-        System.out.println("");
+        System.out.println();
 
-        StringBuffer receiveString = new StringBuffer();
+        // StringBuffer receiveString = new StringBuffer();
+        StringBuilder receiveString = new StringBuilder();
 
         while (true) {
             // create a datagram packet for receiving data
