@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Krešimir Pripužić <kresimir.pripuzic@fer.hr>
+ * @author Nikša Brala <nb53922@fer.hr>
  */
 public class StupidUDPClient {
 
