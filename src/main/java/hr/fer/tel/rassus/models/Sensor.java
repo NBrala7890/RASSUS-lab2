@@ -68,4 +68,14 @@ public class Sensor {
 
     }
 
+    public void generateReading() {
+
+        // Calculating the duration (in seconds) of this sensor's life
+        long lifeInSeconds = ((System.currentTimeMillis() - lifeStart) / 1000);
+
+        // Returning the NO2 reading stored on the index based on the elapsed sensor life
+        myCurrentNO2Reading = allNO2Readings.get((int) (lifeInSeconds % 100 + 1));
+
+    }
+
 }
