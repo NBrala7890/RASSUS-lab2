@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ConfigProperties {
@@ -18,6 +19,12 @@ public class ConfigProperties {
 
     public static final Duration CONSUMER_POLL_TIMEOUT = Duration.ofMillis(1000);
     // Time that the consumer will wait for a new message before continuing
+
+    public static final double PACKAGE_LOSS_RATE = 0.3;
+    // Percentage of packages lost in network
+
+    public static final int PACKAGE_DELAY = 1000;
+    // Package delay parameter
 
     public static Properties consumerProperties(String groupId) {
         Properties properties = new Properties();

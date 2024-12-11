@@ -1,5 +1,6 @@
 package hr.fer.tel.rassus;
 
+import hr.fer.tel.rassus.models.Sensor;
 import hr.fer.tel.rassus.models.SensorModel;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -8,16 +9,12 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static hr.fer.tel.rassus.config.ConfigProperties.CONSUMER_POLL_TIMEOUT;
-import static hr.fer.tel.rassus.config.ConfigProperties.TOPICS;
-import static hr.fer.tel.rassus.config.ConfigProperties.consumerProperties;
-import static hr.fer.tel.rassus.config.ConfigProperties.producerProperties;
+import static hr.fer.tel.rassus.config.ConfigProperties.*;
 
 public class SensorApplication {
 
@@ -68,8 +65,8 @@ public class SensorApplication {
                     }
                 }
             }
-            consumer.commitAsync(); //potvrda primljenih poruka
-        } while (!received); //dok ne primi poruku koju ceka
+            consumer.commitAsync();
+        } while (!received);
     }
 
     public static void main(String[] args) {
@@ -134,6 +131,9 @@ public class SensorApplication {
             TimeUnit.SECONDS.sleep(1);
             for (SensorModel sensorModel1 : otherSensors)
                 System.out.println(sensorModel1.getId());
+
+            // Creating a new sensor that will generate its own readings and exchange them with other nodes
+            Sensor sensor = new Sensor(sensorModel, otherSensors);
 
 
         } catch (Exception e) {
