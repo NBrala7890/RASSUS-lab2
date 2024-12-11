@@ -2,9 +2,9 @@
  * This code has been developed at Departement of Telecommunications,
  * Faculty of Electrical Engineering and Computing, University of Zagreb.
  */
-package hr.fer.tel.rassus.stupidudp.server;
+package hr.fer.tel.rassus.server;
 
-import hr.fer.tel.rassus.stupidudp.network.SimpleSimulatedDatagramSocket;
+import hr.fer.tel.rassus.network.SimpleSimulatedDatagramSocket;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -13,7 +13,7 @@ import java.net.DatagramSocket;
  *
  * @author Krešimir Pripužić <kresimir.pripuzic@fer.hr>
  */
-public class StupidUDPServer {
+public class UDPServer {
 
     static final int PORT = 10001; // server port
 

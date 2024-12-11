@@ -2,9 +2,10 @@
  * This code has been developed at Departement of Telecommunications,
  * Faculty of Electrical Eengineering and Computing, University of Zagreb.
  */
-package hr.fer.tel.rassus.stupidudp.client;
+package hr.fer.tel.rassus.client;
 
-import hr.fer.tel.rassus.stupidudp.network.*;
+import hr.fer.tel.rassus.network.SimpleSimulatedDatagramSocket;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -17,7 +18,7 @@ import java.util.logging.Logger;
  *
  * @author Nikša Brala <nb53922@fer.hr>
  */
-public class StupidUDPClient {
+public class UDPClient {
 
     static final int PORT = 10001; // server port
 
@@ -67,7 +68,7 @@ public class StupidUDPClient {
             } catch (SocketTimeoutException e) {
                 break;
             } catch (IOException ex) {
-                Logger.getLogger(StupidUDPClient.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(UDPClient.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             // construct a new String by decoding the specified subarray of bytes

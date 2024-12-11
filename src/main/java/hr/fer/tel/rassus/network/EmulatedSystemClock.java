@@ -5,7 +5,7 @@
  */
 
 
-package hr.fer.tel.rassus.stupidudp.network;
+package hr.fer.tel.rassus.network;
 
 import java.util.Random;
 
