@@ -12,6 +12,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import static hr.fer.tel.rassus.config.ConfigProperties.*;
@@ -27,6 +28,8 @@ public class SensorApplication {
     private static SensorModel sensorModel;
 
     private static HashSet<SensorModel> otherSensors;
+
+    private static final AtomicBoolean running = new AtomicBoolean();
 
 //    private static void handleCommand(Consumer<String, String> consumer, String command) {
 //
@@ -52,7 +55,9 @@ public class SensorApplication {
 //
 //    }
 
-    private static void handleCommand(Consumer<String, String> consumer, String command) {
+    private static void handleCommand(Consumer<String, String> consumer,
+                                      String command,
+                                      java.util.function.Consumer<Void> action) {
         logger.info("[TOPIC = Command] Waiting for " + command + " command...\n");
         boolean received = false;
         do {
@@ -60,6 +65,7 @@ public class SensorApplication {
                 if ("command".equalsIgnoreCase(record.topic())) {
                     if (command.equalsIgnoreCase(record.value())) {
                         logger.info("[TOPIC = Command] Command " + command + " received successfully!\n");
+                        action.accept(null);
                         received = true;
                         break;
                     }
@@ -99,7 +105,7 @@ public class SensorApplication {
             consumer.subscribe(TOPICS);
 
             // Waiting for the "Start" control message
-            handleCommand(consumer, "Start");
+            handleCommand(consumer, "Start", n -> running.set(true));
 
             // Send registration
             logger.info("[TOPIC = Register] Sending a registration message...\n");
@@ -133,7 +139,7 @@ public class SensorApplication {
                 System.out.println(sensorModel1.getId());
 
             // Creating a new sensor that will generate its own readings and exchange them with other nodes
-            Sensor sensor = new Sensor(sensorModel, otherSensors);
+            // Sensor sensor = new Sensor(sensorModel, otherSensors);
 
 
         } catch (Exception e) {
