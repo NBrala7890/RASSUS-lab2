@@ -42,8 +42,6 @@ public class Sensor implements Runnable {
 
     private final AtomicBoolean running;
 
-    private long lifeStart;
-
     private static ArrayList<Double> allNO2Readings;
 
     private double myCurrentNO2Reading;
@@ -83,9 +81,6 @@ public class Sensor implements Runnable {
 
             logger.info("Starting the sensor...\n");
 
-            // Marking the start of the sensor lifetime
-            this.lifeStart = System.currentTimeMillis();
-
             // Storing all the NO2 readings from the readings.csv file
             storeAllNO2Readings();
 
@@ -93,13 +88,15 @@ public class Sensor implements Runnable {
             socket.setSoTimeout(10);
             clock = new ConcurrentEmulatedSystemClock(new EmulatedSystemClock());
 
-            // Adding the other sensors' ids to the vector
+            // Getting the sensor ids of all the other sensors
             Collection<Integer> allSensorIds = new ArrayList<>();
             for (SensorModel sensorModel1 : otherSensors)
                 allSensorIds.add(sensorModel1.getId());
 
             // Adding this sensor's id to the vector
             allSensorIds.add(sensorModel.getId());
+
+            // Creating an empty vector timestamp for all the registered sensors
             vectorTimestamp = new Vector(allSensorIds.stream().mapToInt(i -> i).toArray());
 
             // Queue for sending
@@ -163,7 +160,7 @@ public class Sensor implements Runnable {
     public void generateReading() {
 
         // Calculating the duration (in seconds) of this sensor's life
-        long lifeInSeconds = ((System.currentTimeMillis() - lifeStart) / 1000);
+        long lifeInSeconds = TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis(null));
 
         // Returning the NO2 reading stored on the index based on the elapsed sensor life
         myCurrentNO2Reading = allNO2Readings.get((int) (lifeInSeconds % 100 + 1));

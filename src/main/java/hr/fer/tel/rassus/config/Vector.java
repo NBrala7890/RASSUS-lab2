@@ -15,9 +15,13 @@ public class Vector implements Comparable<Vector>, Serializable {
     private final Map<Integer, Integer> mapper;
 
     public Vector(int[] ids) {
+
         mapper = new TreeMap<>();
+
+        // Setting the values for all the ids to 0
         for (int id : ids)
             mapper.put(id, 0);
+
     }
 
     private Vector(Map<Integer, Integer> mapper) {
@@ -41,27 +45,18 @@ public class Vector implements Comparable<Vector>, Serializable {
 
     @Override
     public int compareTo(Vector other) {
+
         return Arrays.compare(mapper.values().toArray(new Integer[0]), other.mapper.values().toArray(new Integer[0]));
-        // Replace Arrays.compare with custom logic for compatibility
-//        Integer[] thisValues = mapper.values().toArray(new Integer[0]);
-//        Integer[] otherValues = other.mapper.values().toArray(new Integer[0]);
-//        for (int i = 0; i < Math.min(thisValues.length, otherValues.length); i++) {
-//            int cmp = Integer.compare(thisValues[i], otherValues[i]);
-//            if (cmp != 0) {
-//                return cmp;
-//            }
-//        }
-//        return Integer.compare(thisValues.length, otherValues.length);
+
     }
 
     @Override
     public String toString() {
+
         StringJoiner sj = new StringJoiner(", ", "[", "]");
         mapper.forEach((key, value) -> sj.add("%d->%3d".formatted(key, value)));
         return sj.toString();
-//        StringJoiner sj = new StringJoiner(", ", "[", "]");
-//        mapper.forEach((key, value) -> sj.add(String.format("%d->%3d", key, value)));
-//        return sj.toString();
+
     }
 
 }
