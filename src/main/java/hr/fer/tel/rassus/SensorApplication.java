@@ -1,5 +1,6 @@
 package hr.fer.tel.rassus;
 
+import hr.fer.tel.rassus.message.DataMessage;
 import hr.fer.tel.rassus.models.Sensor;
 import hr.fer.tel.rassus.models.SensorModel;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -9,8 +10,11 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -30,6 +34,10 @@ public class SensorApplication {
     private static HashSet<SensorModel> otherSensors;
 
     private static final AtomicBoolean running = new AtomicBoolean();
+
+    private static final Collection<DataMessage> tempMessages = ConcurrentHashMap.newKeySet();
+    private static final Collection<DataMessage> scalarTimestampSorted = new ConcurrentLinkedQueue<>();
+    private static final Collection<DataMessage> vectorTimestampSorted = new ConcurrentLinkedQueue<>();
 
 //    private static void handleCommand(Consumer<String, String> consumer, String command) {
 //
@@ -136,15 +144,45 @@ public class SensorApplication {
             // Printing the other sensors
             TimeUnit.SECONDS.sleep(1);
             for (SensorModel sensorModel1 : otherSensors)
-                System.out.println(sensorModel1.getId());
+                logger.info("Other sensor id: " + sensorModel1.getId() + "\n");
 
             // Creating a new sensor that will generate its own readings and exchange them with other nodes
-            // Sensor sensor = new Sensor(sensorModel, otherSensors);
+            new Thread(new Sensor(
+                    sensorModel,
+                    running,
+                    otherSensors,
+                    tempMessages,
+                    scalarTimestampSorted,
+                    vectorTimestampSorted)).start();
+
+            handleCommand(consumer, "Stop", n -> {
+
+                running.set(false);
+
+                try {
+                    logger.info("Sleeping...\n");
+                    Thread.sleep(2000);
+                }
+                catch (Exception e) {
+                    logger.severe("Interrupted! " + e.getMessage());
+                }
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("Sortirano prema skalarnim vremenima:\n");
+                sb.append("sensor id: NO2, scalar, vector\n");
+                scalarTimestampSorted.forEach(m -> sb.append(m).append("\n"));
+                sb.append("\n\n");
+                sb.append("Sortirano prema vektorskim vremenima:\n");
+                sb.append("sensor id: NO2, scalar, vector\n");
+                vectorTimestampSorted.forEach(m -> sb.append(m).append("\n"));
+                logger.info(sb.toString());
+            });
 
 
         } catch (Exception e) {
             logger.severe("An error has occurred while initialising Kafka elements. " + e.getMessage());
         }
+        logger.info("Node stopped successfully!");
 
     }
 

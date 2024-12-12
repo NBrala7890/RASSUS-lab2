@@ -10,7 +10,7 @@ public class EmulatedSystemClock {
     public EmulatedSystemClock() {
         startTime = System.currentTimeMillis();
         Random r = new Random();
-        jitter = (r.nextInt(20 )) / 100d;// slučajni jitter između 0 i 20, podijeljen s 100
+        jitter = (r.nextInt(20 )) / 100d;// slucajni jitter izmedju 0 i 20, podijeljen s 100
 
     }
 
