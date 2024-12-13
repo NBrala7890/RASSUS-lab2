@@ -4,10 +4,10 @@ import java.util.Random;
 
 public class EmulatedSystemClock {
 
-    private long startTime;
+    private final long startTime;
 
     // Average deviation in 1 second
-    private double jitter;
+    private final double jitter;
 
     public EmulatedSystemClock() {
         startTime = System.currentTimeMillis();
