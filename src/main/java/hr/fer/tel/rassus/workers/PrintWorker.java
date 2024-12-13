@@ -12,10 +12,12 @@ public class PrintWorker implements Runnable {
 
     private static final Logger logger = Logger.getLogger(PrintWorker.class.getName());
 
-    private static int invokedCounter;
+    private static int printingInvokedCounter;
 
     private final Collection<DataMessage> tempMessages;
+
     private final Collection<DataMessage> scalarTimestampSorted;
+
     private final Collection<DataMessage> vectorTimestampSorted;
 
     public PrintWorker(Collection<DataMessage> tempMessages, Collection<DataMessage> scalarTimestampSorted, Collection<DataMessage> vectorTimestampSorted) {
@@ -27,22 +29,23 @@ public class PrintWorker implements Runnable {
     @Override
     public void run() {
 
-        invokedCounter++;
+        // Keeping the count of the total number of printings
+        printingInvokedCounter++;
 
         // Copying the messages that are to be printed
         List<DataMessage> copied = new ArrayList<>(tempMessages);
 
-        // Emptying the temporarily stored messages
+        // Emptying the temporarily stored messages because they'll be printed now
         tempMessages.clear();
 
         // Preparing the StringBuilder for printing
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\nPrint counter: ").append(invokedCounter);
+        sb.append("\nPrint counter: ").append(printingInvokedCounter);
 
         sb.append("\n\n");
 
-        // Calculating the average value
+        // Calculating the average value of readings
         double avg = copied.stream().mapToDouble(DataMessage::getData).sum() / copied.size();
         sb.append("Average reading value: ").append(avg);
 

@@ -29,6 +29,7 @@ public class CoordinatorApplication {
             TimeUnit.SECONDS.sleep(1);
             System.out.print("Press ENTER to stop the Kafka coordinator.");
             scanner.nextLine();
+            System.out.println();
             logger.info("Stopping the coordinator...\n");
             producer.send(new ProducerRecord<>("Command", "Stop"));
 

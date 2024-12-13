@@ -46,43 +46,82 @@ public class ReceiveWorker implements Runnable {
 
     @Override
     public void run() {
+
         while (running.get()) {
+
             try {
-                DatagramPacket recievedPacket = new DatagramPacket(buffer, buffer.length);
-                socket.receive(recievedPacket);
-                Message m = Message.deserialize(PacketUtils.dataFromDatagramPacket(recievedPacket));
-                //azuriraj vremena
-                long newScalar = clock.currentTimeMillis(m.getScalarTimestamp());
-                Vector newVector = vectorTimestamp.update(nodeId, m.getVectorTimestamp(), true);
-                m.setScalarTimestamp(newScalar);
-                m.setVectorTimestamp(newVector);
-                switch (m.getType()) {
+                
+                // Creating a DatagramPacket that will hold the received UDP packet of length buffer.length
+                DatagramPacket receivedPacket = new DatagramPacket(buffer, buffer.length);
+
+                // Receives a datagram packet from this socket.
+                // This method blocks until a datagram is received.
+                // When this method returns, the DatagramPacket's buffer is filled with the data received.
+                socket.receive(receivedPacket);
+                
+                // Extracting the received message from the received packet
+                Message receivedMessage = Message.deserialize(PacketUtils.dataFromDatagramPacket(receivedPacket));
+                
+                // Extracting the scalar timestamp from the received message
+                long newScalarTimestamp = clock.currentTimeMillis(receivedMessage.getScalarTimestamp());
+
+                // Updating the current vectorTimestamp with the vectorTimestamp from the received message
+                Vector newVector = vectorTimestamp.update(nodeId, receivedMessage.getVectorTimestamp(), true);
+
+                // Updating the scalarTimestamp of the received message with the new scalarTimestamp
+                receivedMessage.setScalarTimestamp(newScalarTimestamp);
+
+                // Updating the vectorTimestamp of the received message with the new vectorTimestamp
+                receivedMessage.setVectorTimestamp(newVector);
+
+                // Checking the type of the received messages
+                switch (receivedMessage.getType()) {
+
+                    // If the received message was carrying DATA, we're sending ACK
                     case DATA -> {
-                        //ako prima data onda salji ack
+
                         Message ackMessage = new AckMessage(
                                 nodeId,
-                                newScalar,
+                                newScalarTimestamp,
                                 newVector,
-                                m.getMessageId());
-                        sendQueue.put(PacketUtils.createSendPacket(ackMessage, recievedPacket.getAddress(), recievedPacket.getPort()));
-                        //spremi poruku u privremeno
-                        tempMessages.add((DataMessage) m);
-                        vectorTimestamp.update(nodeId, null, false);  //radnja zavrsena, povecaj za 1
+                                receivedMessage.getMessageId());
+
+                        sendQueue.put(PacketUtils.createSendPacket(ackMessage, receivedPacket.getAddress(), receivedPacket.getPort()));
+
+                        // Storing the received message amongst temporary messages (printing queue)
+                        tempMessages.add((DataMessage) receivedMessage);
+
+                        // An action has been completed - incrementing by 1...
+                        vectorTimestamp.update(nodeId, null, false);
+
                     }
+
+                    // If the received message was an ACK message, we're removing it from the unacknowledged messages
                     case ACK -> {
-                        //makni iz nepotvrdenih
-                        unAckPackets.remove(m.getMessageId());
-                        vectorTimestamp.update(nodeId, null, false);  //radnja zavrsena, povecaj za 1
+
+                        // An action has been completed - incrementing by 1...
+                        unAckPackets.remove(receivedMessage.getMessageId());
+                        vectorTimestamp.update(nodeId, null, false);
+
                     }
+
+                    // Throwing an exception if the received message is nor DATA, nor ACK message
                     default -> throw new IllegalArgumentException(
-                            String.format("'%s' is invalid type!", m.getType()));
+                            String.format("Message type '%s' is invalid type!", receivedMessage.getType()));
+
                 }
-            } catch (SocketTimeoutException ignored) {
-            } catch (Exception e) {
-                logger.severe(e.getMessage());
+
+            }
+
+            catch (SocketTimeoutException ignored) {}
+
+            catch (Exception e) {
+                logger.severe("An error has occurred while receiving a packet. " + e.getMessage());
                 break;
             }
+
         }
+
     }
 
 }

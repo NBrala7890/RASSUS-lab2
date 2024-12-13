@@ -5,19 +5,23 @@ import java.util.Random;
 public class EmulatedSystemClock {
 
     private long startTime;
-    private double jitter; //postotak odstupanja u jednoj sekudni
+
+    // Average deviation in 1 second
+    private double jitter;
 
     public EmulatedSystemClock() {
         startTime = System.currentTimeMillis();
         Random r = new Random();
-        jitter = (r.nextInt(20 )) / 100d;// slucajni jitter izmedju 0 i 20, podijeljen s 100
+        // Random jitter between 0 and 20, divided by 100
+        jitter = (r.nextInt(20 )) / 100d;
 
     }
 
     public long currentTimeMillis() {
         long current = System.currentTimeMillis();
         long diff =current - startTime;
-        double coef = diff / 1000;
-        return startTime + Math.round(diff * Math.pow((1+jitter), coef)); //Vrati vrijeme s dodanim jitterom, eksponencijalni rast
+        double coefficient = (double) diff / 1000;
+        // Return the time with added jitter, EXPONENTIAL growth
+        return startTime + Math.round(diff * Math.pow((1+jitter), coefficient));
     }
 }

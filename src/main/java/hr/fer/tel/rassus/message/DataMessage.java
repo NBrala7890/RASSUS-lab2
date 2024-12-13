@@ -6,6 +6,8 @@ import java.io.Serial;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+// A message that contains data
+
 public class DataMessage extends Message {
 
     @Serial

@@ -36,32 +36,10 @@ public class SensorApplication {
     private static final AtomicBoolean running = new AtomicBoolean();
 
     private static final Collection<DataMessage> tempMessages = ConcurrentHashMap.newKeySet();
-    private static final Collection<DataMessage> scalarTimestampSorted = new ConcurrentLinkedQueue<>();
-    private static final Collection<DataMessage> vectorTimestampSorted = new ConcurrentLinkedQueue<>();
 
-//    private static void handleCommand(Consumer<String, String> consumer, String command) {
-//
-//
-//        // logger.info("Waiting for a " + command + " command.");
-//        System.out.println("Waiting for a " + command + " command.");
-//
-//        consumer.seekToEnd(consumer.assignment()); // Skip old messages and start from the latest
-//
-//        while (true) {
-//
-//            ConsumerRecords<String, String> consumerRecords = consumer.poll(CONSUMER_POLL_TIMEOUT);
-//
-//            consumerRecords.forEach(record -> {
-//                System.out.printf("Consumer Record: (%s, %s, %d, %d)\n",
-//                        record.key(), record.value(),
-//                        record.partition(), record.offset());
-//            });
-//
-//            consumer.commitAsync();
-//
-//        }
-//
-//    }
+    private static final Collection<DataMessage> scalarTimestampSorted = new ConcurrentLinkedQueue<>();
+
+    private static final Collection<DataMessage> vectorTimestampSorted = new ConcurrentLinkedQueue<>();
 
     private static void handleCommand(Consumer<String, String> consumer,
                                       String command,
@@ -146,7 +124,8 @@ public class SensorApplication {
             for (SensorModel sensorModel1 : otherSensors)
                 logger.info("Other sensor id: " + sensorModel1.getId() + "\n");
 
-            // Creating a new sensor that will generate its own readings and exchange them with other nodes
+            /* Creating a new sensor (in a separate thread)
+            that will generate its own readings and exchange them with other nodes */
             new Thread(new Sensor(
                     sensorModel,
                     running,
@@ -155,6 +134,7 @@ public class SensorApplication {
                     scalarTimestampSorted,
                     vectorTimestampSorted)).start();
 
+            // Waiting for the "Stop" control message
             handleCommand(consumer, "Stop", n -> {
 
                 running.set(false);
@@ -168,14 +148,15 @@ public class SensorApplication {
                 }
 
                 StringBuilder sb = new StringBuilder();
-                sb.append("Sortirano prema skalarnim vremenima:\n");
+                sb.append("Sorted by scalar:\n");
                 sb.append("sensor id: NO2, scalar, vector\n");
                 scalarTimestampSorted.forEach(m -> sb.append(m).append("\n"));
                 sb.append("\n\n");
-                sb.append("Sortirano prema vektorskim vremenima:\n");
+                sb.append("Sorted by vector:\n");
                 sb.append("sensor id: NO2, scalar, vector\n");
                 vectorTimestampSorted.forEach(m -> sb.append(m).append("\n"));
                 logger.info(sb.toString());
+
             });
 
 

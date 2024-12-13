@@ -84,8 +84,14 @@ public class Sensor implements Runnable {
             // Storing all the NO2 readings from the readings.csv file
             storeAllNO2Readings();
 
+            // Initialising a custom datagram socket for UDP communication
             socket = new SimpleSimulatedDatagramSocket(sensorModel.getPort(), PACKAGE_LOSS_RATE, PACKAGE_DELAY, running);
+
+            /* Telling the socket to wait for up to 10 milliseconds when calling receive()
+            If no packet is received within this time, the method throws a SocketTimeoutException */
             socket.setSoTimeout(10);
+
+            // Initialising a local clock that simulates time progression in the system
             clock = new ConcurrentEmulatedSystemClock(new EmulatedSystemClock());
 
             // Getting the sensor ids of all the other sensors
@@ -96,20 +102,34 @@ public class Sensor implements Runnable {
             // Adding this sensor's id to the vector
             allSensorIds.add(sensorModel.getId());
 
-            // Creating an empty vector timestamp for all the registered sensors
+            // Creating an empty vector whose keys are sensor ids and all the values are initially set to 0
+            // A data structure that maintains a mapping between sensor IDs and their respective timestamps
             vectorTimestamp = new Vector(allSensorIds.stream().mapToInt(i -> i).toArray());
 
-            // Queue for sending
+            // A buffer where outgoing messages are queued before being sent over the network (via UDP)
+            /* Sensors produce readings and add them to the queue sendQueue,
+            and a separate thread will retrieve and send them */
+            /* A blocking queue allows threads to block (wait) when trying to retrieve
+            an item from the queue if it is empty, or when trying to add an item if it is full.
+            This makes it easier to synchronize producers and consumers. */
             sendQueue = new LinkedBlockingQueue<>();
 
-            // Sent, but not confirmed
+            // A map used for tracking the messages that have been sent but not yet acknowledged (confirmed)
+            /* After sending a message, it’s added to this map.
+            When an acknowledgment is received, the message can be removed from the map. */
+            /* ConcurrentHashMap is a thread-safe version of the standard HashMap
+            (allows multiple threads to read and write concurrently without the need for explicit synchronization) */
             unacknowledged = new ConcurrentHashMap<>();
 
             // Planned execution
+            // ScheduledExecutorService provides a way to schedule tasks to run periodically or after a delay
+            // A pool of size 1 because there is only one thread handling all scheduled tasks
             scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
+            // Starting the workers
             startWorkers();
 
+            // Starting the loop
             loop();
 
         }
@@ -163,24 +183,29 @@ public class Sensor implements Runnable {
         long lifeInSeconds = TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis(null));
 
         // Returning the NO2 reading stored on the index based on the elapsed sensor life
-        myCurrentNO2Reading = allNO2Readings.get((int) (lifeInSeconds % 100 + 1));
+        myCurrentNO2Reading = allNO2Readings.get((int) (lifeInSeconds % 100));
 
     }
 
     private void startWorkers() {
 
+        // Creating a worker that will handle the RECEIVING of UDP packages
         Runnable receiveWorker = new ReceiveWorker(
                 sensorModel.getId(), clock, vectorTimestamp, socket, running, sendQueue, unacknowledged, tempMessages);
 
+        // Creating a worker that will handle the SENDING of UDP packages
         Runnable sendWorker = new SendWorker(socket, running, sendQueue, unacknowledged);
 
+        // Creating a worker that will handle the PRINTING of UDP packages
         Runnable printWorker = new PrintWorker(tempMessages, scalarTimestampSorted, vectorTimestampSorted);
 
+        // Starting the receiveWorker in a separate thread
         new Thread(receiveWorker).start();
 
+        // Starting the sendWorker in a separate thread
         new Thread(sendWorker).start();
 
-        // Print periodically
+        // Setting the printing to be done periodically (every 5 seconds)
         scheduledExecutorService.scheduleAtFixedRate(printWorker, 5, 5, TimeUnit.SECONDS);
 
         logger.info("Workers started successfully!\n");
@@ -189,11 +214,10 @@ public class Sensor implements Runnable {
 
     private void loop() throws IOException, InterruptedException {
 
-        long start;
-
         while (running.get()) {
 
-            start = System.currentTimeMillis();
+            // Marking the start timestamp
+            long start = System.currentTimeMillis();
 
             // Generates a new reading and stores it to the myCurrentNO2Reading variable
             generateReading();
